@@ -75,20 +75,18 @@ const signupHandler = async (req, res) => {
       !email ||
       !password ||
       !confirmPassword ||
-      !accountType ||
-      !contactNumber ||
       !otp
     ) {
-      return res.status(400).json({
+      return res.status(403).json({
         success: false,
-        message: "Something is missing from input data",
+        message: "Something is missing all fields are required",
       });
     }
 
-    if (password != confirmPassword) {
+    if (password !== confirmPassword) {
       return res.status(400).json({
         success: false,
-        message: "The password and confirm password is not matcing",
+        message: "The password and confirm password are not matching",
       });
     }
 
@@ -97,7 +95,7 @@ const signupHandler = async (req, res) => {
     if (findUser) {
       return res.status(400).json({
         success: false,
-        message: "You are already registered",
+        message: "User is already registered",
       });
     }
 
@@ -109,12 +107,12 @@ const signupHandler = async (req, res) => {
     if (recentOtp.length == 0) {
       return res.status(400).json({
         success: false,
-        message: `OTP is not found`,
+        message: `OTP not found`,
       });
     } else if (otp !== recentOtp.otp) {
       return res.status(400).json({
         success: false,
-        message: "The otp is wrong",
+        message: "Invalid Otp",
       });
     }
 
@@ -167,9 +165,10 @@ const loginHandler = async (req, res) => {
     let findUser = await User.findOne({ email }).populate("additionalDetails");
 
     if (!findUser) {
-      return res.status(500).json({
+      return res.status(401).json({
         success: false,
-        message: "no user with this email",
+        message:
+          "no user with this email, email is wrong or sign up with this email",
       });
     }
 
@@ -231,6 +230,14 @@ const changePassword = async (req, res) => {
 
     const findUser = await User.findOne({ email });
 
+    if (!findUser) {
+      return res.status(401).json({
+        success: false,
+        message:
+          "no user with this email, email is wrong or sign up with this email",
+      });
+    }
+
     let isMatch = await bcrypt.compare(findUser.password, oldPassword);
 
     if (!isMatch) {
@@ -243,7 +250,7 @@ const changePassword = async (req, res) => {
     if (newPassword !== confirmNewPassword) {
       return res.status(400).json({
         success: false,
-        message: "New passwords do not match",
+        message: "New password and confirm new assword do not match",
       });
     }
 
@@ -256,7 +263,6 @@ const changePassword = async (req, res) => {
       success: true,
       message: "Password changed successfully",
     });
-
   } catch (err) {
     console.log("Error in changePassword Handler");
     console.error(err);
@@ -268,4 +274,4 @@ const changePassword = async (req, res) => {
   }
 };
 
-module.exports = { sendOTP, signupHandler, loginHandler };
+module.exports = { sendOTP, signupHandler, loginHandler, changePassword };
