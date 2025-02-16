@@ -184,7 +184,7 @@ const loginHandler = async (req, res) => {
     const payload = {
       email: findUser.email,
       id: findUser._id,
-      role: findUser.role,
+      accountType: findUser.accountType,
     };
 
     let token = jwt.sign(payload, process.env.JWT_KEY, {
