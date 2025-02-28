@@ -1,12 +1,13 @@
 const Course = require("../models/Course");
-const Tag = require("../models/Tag");
+const Category = require("../models/Category");
 const User = require("../models/User");
 const uploadImageToCloudinary = require("../utils/imageUploader");
 
+// course creating handler function
 const createCourse = async (req, res) => {
   try {
     // fetch data
-    const { courseName, courseDescription, whatYouWillLearn, price, tag } =
+    const { courseName, courseDescription, whatYouWillLearn, price, category } =
       req.body;
 
     //get thumbnail
@@ -18,7 +19,7 @@ const createCourse = async (req, res) => {
       !courseDescription ||
       !whatYouWillLearn ||
       !price ||
-      !tag
+      !category
     ) {
       return res.status(400).json({
         suuccess: false,
@@ -30,6 +31,7 @@ const createCourse = async (req, res) => {
     const userId = req.user.id;
     const instructorDetails = await User.findById(userId);
     console.log("Instrctor details - ", instructorDetails);
+    // TODO: Verify that userId and Instructor Details._id are same or different ?
 
     if (!instructorDetails) {
       return res.status(404).json({
@@ -38,12 +40,12 @@ const createCourse = async (req, res) => {
       });
     }
 
-    //check given tag is valid or not
-    const tagDetails = await Tag.findById({ tag });
-    if (!tagDetails) {
+    //check given category is valid or not
+    const categoryDetails = await Category.findById({ category });
+    if (!categoryDetails) {
       return res.status(404).json({
         success: false,
-        message: "Tag Details not found",
+        message: "category Details not found",
       });
     }
 
@@ -60,8 +62,8 @@ const createCourse = async (req, res) => {
       instructor: instructorDetails._id,
       whatYouWillLearn: whatYouWillLearn,
       price,
-      tag: tagDetails._id,
-      thumbnail: thumbnailImage,
+      category: categoryDetails._id,
+      thumbnail: thumbnailImage.secure_url,
     });
 
     //add the new course to the user schema of instructor
@@ -75,9 +77,9 @@ const createCourse = async (req, res) => {
       { new: true }
     );
 
-    //update Tag schema
-    await Tag.findByIdAndUpdate(
-      { _id: tagDetails._id },
+    //update Category schema
+    await Category.findByIdAndUpdate(
+      { _id: categoryDetails._id },
       {
         $push: {
           courses: newCourse._id,
@@ -89,7 +91,7 @@ const createCourse = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Course created successfully",
-      NewCourse: newCourse,
+      data: newCourse,
     });
   } catch (err) {
     conosole.log("Error inside create Course handler");
@@ -102,30 +104,18 @@ const createCourse = async (req, res) => {
   }
 };
 
+// Get all courses
 const showAllCourses = async (req, res) => {
   try {
-    const allCourses = await Course.find(
-      {},
-      {
-        courseName: true,
-        price: true,
-        thumbnail: true,
-        instructor: true,
-        ratingAndReviews: true,
-        studentsEnrolled: true,
-      }
-    )
-      .populate("instructor")
-      .exec();
+    // TODO : Change below statement incrementally
+    const allCourses = await Course.find({});
 
     return res.status(200).json({
       success: true,
       message: "Data for all courses fetched succesfully",
       data: allCourses,
     });
-
-  } 
-  catch (err) {
+  } catch (err) {
     console.log("Error in show all courses handler");
     console.error(err);
     return res.status(500).json({
@@ -136,4 +126,4 @@ const showAllCourses = async (req, res) => {
   }
 };
 
-module.exports = { createCourse ,showAllCourses };
+module.exports = { createCourse, showAllCourses };
