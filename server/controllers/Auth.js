@@ -131,7 +131,7 @@ const signupHandler = async (req, res) => {
       email,
       password: hashedPassword,
       accountType,
-      additionalDetails: profileData,
+      additionalDetails: profileData._id,
       image: `https://api.dicebear.com/5.x/initials/svg?seed=${firstName} ${lastName}`,
     });
 
